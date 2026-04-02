@@ -1,4 +1,4 @@
-import { generateCode } from "./claude.js";
+import { getAIProvider } from "./ai-provider.js";
 import {
   getIssue,
   listRepoFiles,
@@ -14,6 +14,8 @@ async function main() {
     throw new Error("ISSUE_NUMBER environment variable is required");
   }
 
+  const ai = getAIProvider();
+
   console.log(`🔍 Reading issue #${issueNumber}...`);
   const issue = await getIssue(issueNumber);
   console.log(`📋 Issue: ${issue.title}`);
@@ -22,15 +24,15 @@ async function main() {
   const existingFiles = await listRepoFiles();
   console.log(`   Found ${existingFiles.length} files`);
 
-  console.log("🤖 Asking Claude to generate code...");
-  const response = await generateCode(issue.title, issue.body, existingFiles);
-  console.log(`   Claude wants to change ${response.files.length} file(s)`);
+  console.log(`🤖 Asking ${ai.name} to generate code...`);
+  const response = await ai.generateCode(issue.title, issue.body, existingFiles);
+  console.log(`   ${ai.name} wants to change ${response.files.length} file(s)`);
 
   if (response.files.length === 0) {
-    console.log("⚠️ Claude returned no files. Nothing to do.");
+    console.log("⚠️ AI returned no files. Nothing to do.");
     await commentOnIssue(
       issueNumber,
-      "🤖 I analyzed this issue but couldn't determine what code changes to make. Please provide more details."
+      `🤖 I analyzed this issue using **${ai.name}** but couldn't determine what code changes to make. Please provide more details.`
     );
     return;
   }
@@ -60,7 +62,7 @@ async function main() {
 
   await commentOnIssue(
     issueNumber,
-    `🤖 I've created PR #${prNumber} to address this issue. The AI reviewer will check it shortly.`
+    `🤖 I've created PR #${prNumber} to address this issue (powered by **${ai.name}**). The AI reviewer will check it shortly.`
   );
 
   console.log("🎉 Done! Waiting for AI reviewer...");

@@ -6,8 +6,10 @@ on:
 
 jobs:
   develop:
-    # Only run when the "ai-task" label is added
-    if: github.event.label.name == 'ai-task'
+    # Run when "ai-task-gemini" or "ai-task-claude" label is added
+    if: >
+      github.event.label.name == 'ai-task-gemini' ||
+      github.event.label.name == 'ai-task-claude'
     runs-on: ubuntu-latest
 
     permissions:
@@ -28,9 +30,20 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Determine AI Provider
+        id: provider
+        run: |
+          if [ "${{ github.event.label.name }}" = "ai-task-claude" ]; then
+            echo "ai_provider=claude" >> $GITHUB_OUTPUT
+          else
+            echo "ai_provider=gemini" >> $GITHUB_OUTPUT
+          fi
+
       - name: Run AI Developer
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          AI_PROVIDER: ${{ steps.provider.outputs.ai_provider }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
         run: npx tsx src/developer.ts

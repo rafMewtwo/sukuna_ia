@@ -6,7 +6,7 @@ on:
 
 jobs:
   review:
-    # Only run when the "ai-developed" label is added
+    # Run when "ai-developed" label is added
     if: github.event.label.name == 'ai-developed'
     runs-on: ubuntu-latest
 
@@ -27,9 +27,33 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Determine AI Provider from issue labels
+        id: provider
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Check PR body for the linked issue and detect which provider was used
+          PR_BODY=$(gh pr view ${{ github.event.pull_request.number }} --json body -q '.body')
+
+          # Check if the PR was created with claude by looking at the issue labels
+          ISSUE_NUM=$(echo "$PR_BODY" | grep -oP 'Closes #\K\d+' || echo "")
+
+          if [ -n "$ISSUE_NUM" ]; then
+            LABELS=$(gh issue view "$ISSUE_NUM" --json labels -q '.labels[].name')
+            if echo "$LABELS" | grep -q "ai-task-claude"; then
+              echo "ai_provider=claude" >> $GITHUB_OUTPUT
+            else
+              echo "ai_provider=gemini" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "ai_provider=gemini" >> $GITHUB_OUTPUT
+          fi
+
       - name: Run AI Reviewer
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          AI_PROVIDER: ${{ steps.provider.outputs.ai_provider }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: npx tsx src/reviewer.ts

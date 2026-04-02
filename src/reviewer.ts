@@ -1,4 +1,4 @@
-import { reviewCode } from "./claude.js";
+import { getAIProvider } from "./ai-provider.js";
 import {
   getPullRequest,
   getPullRequestDiff,
@@ -11,6 +11,8 @@ async function main() {
   if (!prNumber) {
     throw new Error("PR_NUMBER environment variable is required");
   }
+
+  const ai = getAIProvider();
 
   console.log(`🔍 Reading PR #${prNumber}...`);
   const pr = await getPullRequest(prNumber);
@@ -27,8 +29,8 @@ async function main() {
       ? diff.substring(0, maxDiffSize) + "\n\n... (diff truncated)"
       : diff;
 
-  console.log("🤖 Asking Claude to review...");
-  const review = await reviewCode(pr.title, pr.body, truncatedDiff);
+  console.log(`🤖 Asking ${ai.name} to review...`);
+  const review = await ai.reviewCode(pr.title, pr.body, truncatedDiff);
   console.log(`   Decision: ${review.decision}`);
   console.log(`   Summary: ${review.summary}`);
   console.log(`   Comments: ${review.comments.length}`);
@@ -37,7 +39,7 @@ async function main() {
   await submitReview(
     prNumber,
     review.decision,
-    review.summary,
+    `**[${ai.name} Review]**\n\n${review.summary}`,
     review.comments
   );
   console.log(`✅ Review submitted: ${review.decision}`);
