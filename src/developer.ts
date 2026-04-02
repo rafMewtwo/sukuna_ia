@@ -6,6 +6,7 @@ import {
   commitFile,
   createPullRequest,
   commentOnIssue,
+  triggerReview,
 } from "./github.js";
 
 async function main() {
@@ -65,7 +66,10 @@ async function main() {
     `🤖 I've created PR #${prNumber} to address this issue (powered by **${ai.name}**). The AI reviewer will check it shortly.`
   );
 
-  console.log("🎉 Done! Waiting for AI reviewer...");
+  console.log("📡 Triggering AI Reviewer...");
+  await triggerReview(prNumber, process.env.AI_PROVIDER || "gemini");
+
+  console.log("🎉 Done! AI reviewer has been triggered.");
 }
 
 main().catch((err) => {

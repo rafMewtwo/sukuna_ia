@@ -217,3 +217,19 @@ export async function commentOnIssue(
     body,
   });
 }
+
+export async function triggerReview(
+  prNumber: number,
+  aiProvider: string
+): Promise<void> {
+  const { owner, repo } = getRepo();
+  await octokit.repos.createDispatchEvent({
+    owner,
+    repo,
+    event_type: "ai-review-requested",
+    client_payload: {
+      pr_number: prNumber,
+      ai_provider: aiProvider,
+    },
+  });
+}
