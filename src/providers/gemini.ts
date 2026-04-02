@@ -17,7 +17,7 @@ export class GeminiProvider implements AIProvider {
     issueBody: string,
     existingFiles: string[]
   ): Promise<DeveloperResponse> {
-    const model = this.client.getGenerativeModel({ model: "gemini-2.0-flash" });
+    const model = this.client.getGenerativeModel({ model: "gemini-2.5-flash" });
 
     const prompt = DEVELOPER_PROMPT(issueTitle, issueBody, existingFiles);
     const result = await model.generateContent(prompt);
@@ -31,7 +31,7 @@ export class GeminiProvider implements AIProvider {
     prBody: string,
     diff: string
   ): Promise<ReviewResponse> {
-    const model = this.client.getGenerativeModel({ model: "gemini-2.0-flash" });
+    const model = this.client.getGenerativeModel({ model: "gemini-2.5-flash" });
 
     const prompt = REVIEWER_PROMPT(prTitle, prBody, diff);
     const result = await model.generateContent(prompt);
