@@ -1,0 +1,18 @@
+{
+  "name": "sukuna-ia",
+  "version": "1.0.0",
+  "description": "AI-powered end-to-end development pipeline: from issue to main",
+  "type": "module",
+  "scripts": {
+    "dev": "npx tsx src/developer.ts",
+    "review": "npx tsx src/reviewer.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "@octokit/rest": "^21.1.1"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  }
+}
