@@ -35,14 +35,15 @@ async function main() {
   console.log(`   Summary: ${review.summary}`);
   console.log(`   Comments: ${review.comments.length}`);
 
+  // GitHub doesn't allow GITHUB_TOKEN to APPROVE its own PRs,
+  // so we submit APPROVE decisions as COMMENT instead and merge directly.
+  const submitEvent = review.decision === "APPROVE" ? "COMMENT" : review.decision;
+  const statusEmoji = review.decision === "APPROVE" ? "✅" : review.decision === "REQUEST_CHANGES" ? "❌" : "💬";
+  const reviewBody = `${statusEmoji} **[${ai.name} Review — ${review.decision}]**\n\n${review.summary}`;
+
   console.log("📝 Submitting review...");
-  await submitReview(
-    prNumber,
-    review.decision,
-    `**[${ai.name} Review]**\n\n${review.summary}`,
-    review.comments
-  );
-  console.log(`✅ Review submitted: ${review.decision}`);
+  await submitReview(prNumber, submitEvent, reviewBody, review.comments);
+  console.log(`✅ Review submitted: ${review.decision} (as ${submitEvent})`);
 
   if (review.decision === "APPROVE") {
     console.log("🔀 Auto-merging PR...");
